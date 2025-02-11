@@ -142,10 +142,12 @@
     <ClCompile Include="src\arm.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer.cpp" />
+    <ClCompile Include="src\segment.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\arm.hpp" />
     <ClInclude Include="src\renderer.hpp" />
+    <ClInclude Include="src\segment.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
