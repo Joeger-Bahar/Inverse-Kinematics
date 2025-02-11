@@ -26,7 +26,10 @@ public:
 	static const size_t LoadTexture(const char* path, int* width, int* height);
 
 	static void DrawRect(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+	static void DrawRect(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 	static void DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, double rot);
+	static void DrawRectRot(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g,
+		Uint8 b, Uint8 a, double rot);
 	static void DrawLine(int x1, int y1, int x2, int y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 	~Renderer();
@@ -36,12 +39,12 @@ public:
 	static SDL_Renderer* renderer;
 	static SDL_Window* window;
 	static bool running;
+	static int mouseX;
+	static int mouseY;
 
 private:
 	void Clear();
 	void Present();
 private:
 	std::function<void(int, int)> m_MouseClickCallback;
-	int mouseX;
-	int mouseY;
 };

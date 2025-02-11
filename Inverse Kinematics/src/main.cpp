@@ -7,7 +7,7 @@ int main()
 {
 	Renderer renderer("Inverse Kinematics", 1000, 700);
 	// BaseX, BaseY, SegmentCount, SegmentWidth, SegmentLength
-	Arm arm(500, 700 - 300, 5, 20, 100);
+	Arm arm(500, 350, 5, 10, 100);
 	// What the actual fuck
 	renderer.OnClick(std::bind(&Arm::SetTarget, &arm, std::placeholders::_1, std::placeholders::_2));
 

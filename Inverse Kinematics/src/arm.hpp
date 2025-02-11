@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "renderer.hpp"
+#include "segment.hpp"
 
 class Arm
 {
@@ -17,9 +18,8 @@ public:
 	void SetTarget(int x, int y);
 
 private:
-	std::vector<SDL_Texture*> m_SegTextures;
-	std::vector<SDL_Rect> m_SegRects;
-	std::vector<float> m_SegAngles;
+	BaseSegment* m_BaseSeg;
+	std::vector<Segment*> m_Segments;
 
 	int m_BaseX;
 	int m_BaseY;

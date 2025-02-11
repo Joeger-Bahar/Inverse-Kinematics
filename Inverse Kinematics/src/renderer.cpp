@@ -6,6 +6,8 @@ std::vector<SDL_Texture*> Renderer::m_LoadedTextures;
 std::vector<SDL_Rect> Renderer::m_LoadedTexturesRects;
 SDL_Renderer* Renderer::renderer = nullptr;
 SDL_Window* Renderer::window = nullptr;
+int Renderer::mouseX = 0;
+int Renderer::mouseY = 0;
 bool Renderer::running = true;
 
 Renderer::Renderer(const char* title, int width, int height)
@@ -64,6 +66,12 @@ void Renderer::DrawRect(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	SDL_RenderFillRect(renderer, rect);
 }
 
+void Renderer::DrawRect(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	SDL_Rect rect = { x, y, w, h };
+	DrawRect(&rect, r, g, b, a);
+}
+
 void Renderer::DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, double rot)
 {
 	// Create a temporary texture with alpha support
@@ -87,11 +95,19 @@ void Renderer::DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, d
 	// Define destination rectangle for rendering the rotated texture
 	SDL_FRect dstRect = { static_cast<float>(rect->x), static_cast<float>(rect->y), static_cast<float>(rect->w), static_cast<float>(rect->h) };
 
+	SDL_FPoint rotationPoint = { 0., 0. };
+
 	// Render the texture with rotation
-	SDL_RenderCopyExF(renderer, texture, nullptr, &dstRect, rot, nullptr, SDL_FLIP_NONE);
+	SDL_RenderCopyExF(renderer, texture, nullptr, &dstRect, rot, &rotationPoint, SDL_FLIP_NONE);
 
 	// Clean up
 	SDL_DestroyTexture(texture);
+}
+
+void Renderer::DrawRectRot(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g, Uint8 b, Uint8 a, double rot)
+{
+	SDL_Rect rect = { x, y, w, h };
+	DrawRectRot(&rect, r, g, b, a, rot);
 }
 
 void Renderer::DrawLine(int x1, int y1, int x2, int y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
