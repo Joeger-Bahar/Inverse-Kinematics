@@ -11,26 +11,25 @@ struct Segment
 	void AssignChild(Segment child);
 	void AssignParent(Segment* parent);
 	void AssignParent(Segment parent);
-	void Update();
+	void ReverseK();
+	void ForwardK();
 	void Render();
 
 public:
-	/* not yet */
-	// I use the bottom-right and top-left coords in conjunct
-	// with the width to obtain the center of the top and bottom 
-	// to make chaining easier.
-	glm::vec2 a; // bottom left
-	glm::vec2 b; // top right
+	glm::vec2 a; // base
+	glm::vec2 b; // top
 	float length, width;
 	double angle;
 	Segment* parent;
 	Segment* child;
 };
 
+// Actually the segment that follows the mouse
 struct BaseSegment : public Segment
 {
 	using Segment::Segment;
-	void Update(const int mouseX, const int mouseY);
+	void ReverseK(const int mouseX, const int mouseY);
+	void ForwardK();
 	void Render();
 	void AssignParent(Segment* child) = delete;
 	void AssignParent(Segment child) = delete;

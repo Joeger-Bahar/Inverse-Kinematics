@@ -8,6 +8,8 @@ SDL_Renderer* Renderer::renderer = nullptr;
 SDL_Window* Renderer::window = nullptr;
 int Renderer::mouseX = 0;
 int Renderer::mouseY = 0;
+int Renderer::screenWidth = 0;
+int Renderer::screenHeight = 0;
 bool Renderer::running = true;
 
 Renderer::Renderer(const char* title, int width, int height)
@@ -20,6 +22,9 @@ void Renderer::Init(const char* title, int width, int height)
 	SDL_Init(SDL_INIT_EVERYTHING);
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+	SDL_GetRendererOutputSize(renderer, &Renderer::screenWidth, &Renderer::screenHeight);
 }
 
 void Renderer::Clear()
@@ -95,10 +100,21 @@ void Renderer::DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, d
 	// Define destination rectangle for rendering the rotated texture
 	SDL_FRect dstRect = { static_cast<float>(rect->x), static_cast<float>(rect->y), static_cast<float>(rect->w), static_cast<float>(rect->h) };
 
-	SDL_FPoint rotationPoint = { 0., 0. };
+	// Rotation point of b using sin and cos
+	SDL_FPoint rotationPoint = { rect->w, rect->h };
+	SDL_FRect rotRect = { rotationPoint.x, rotationPoint.y, 5, 5 };
+
+	SDL_FRect bRect = { rect->x, rect->y, 5, 5 };
 
 	// Render the texture with rotation
 	SDL_RenderCopyExF(renderer, texture, nullptr, &dstRect, rot, &rotationPoint, SDL_FLIP_NONE);
+	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	SDL_RenderDrawRectF(renderer, &dstRect);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+	SDL_RenderFillRectF(renderer, &rotRect);
+	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+	SDL_RenderFillRectF(renderer, &bRect);
+
 
 	// Clean up
 	SDL_DestroyTexture(texture);
@@ -119,6 +135,11 @@ void Renderer::DrawLine(int x1, int y1, int x2, int y2, Uint8 r, Uint8 g, Uint8 
 void Renderer::OnClick(std::function<void(int, int)> func)
 {
 	m_MouseClickCallback = func;
+}
+
+void Renderer::OnMove(std::function<void(int, int)> func)
+{
+	m_MouseMoveCallback = func;
 }
 
 void Renderer::DrawTexture(SDL_Texture* texture, SDL_Rect* srcRect, SDL_Rect* dstRect)
@@ -154,7 +175,7 @@ void Renderer::Update()
 		case SDL_MOUSEMOTION:
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
-			m_MouseClickCallback(mouseX, mouseY);
+			m_MouseMoveCallback(mouseX, mouseY);
 
 		case SDL_MOUSEBUTTONDOWN:
 			uint32_t mouseState = SDL_GetMouseState(&mouseX, &mouseY);

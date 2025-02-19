@@ -9,7 +9,7 @@ int main()
 	// BaseX, BaseY, SegmentCount, SegmentWidth, SegmentLength
 	Arm arm(500, 350, 5, 10, 100);
 	// What the actual fuck
-	renderer.OnClick(std::bind(&Arm::SetTarget, &arm, std::placeholders::_1, std::placeholders::_2));
+	renderer.OnMove(std::bind(&Arm::SetTarget, &arm, std::placeholders::_1, std::placeholders::_2));
 
 	while (Renderer::running)
 	{

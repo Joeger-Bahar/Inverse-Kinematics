@@ -18,6 +18,7 @@ public:
 
 	// Run function with 2 int parameters and pass the mouse position
 	void OnClick(std::function<void(int, int)> func);
+	void OnMove(std::function<void(int, int)> func);
 
 	static void DrawTexture(SDL_Texture* texture, SDL_Rect* srcRect, SDL_Rect* dstRect);
 	static void DrawTextureRot(SDL_Texture* texture, SDL_Rect* srcRect, SDL_Rect* dstRect, double rot);
@@ -38,13 +39,16 @@ public:
 	static std::vector<SDL_Rect> m_LoadedTexturesRects;
 	static SDL_Renderer* renderer;
 	static SDL_Window* window;
-	static bool running;
 	static int mouseX;
 	static int mouseY;
+	static int screenWidth;
+	static int screenHeight;
+	static bool running;
 
 private:
 	void Clear();
 	void Present();
 private:
 	std::function<void(int, int)> m_MouseClickCallback;
+	std::function<void(int, int)> m_MouseMoveCallback;
 };

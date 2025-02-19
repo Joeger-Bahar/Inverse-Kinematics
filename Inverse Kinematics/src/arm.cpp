@@ -30,7 +30,8 @@ Arm::~Arm()
 
 void Arm::Update()
 {
-	m_BaseSeg->Update(Renderer::mouseX, Renderer::mouseY);
+	m_BaseSeg->ReverseK(Renderer::mouseX, Renderer::mouseY);
+	m_Segments.back()->ForwardK();
 }
 
 void Arm::Render()
