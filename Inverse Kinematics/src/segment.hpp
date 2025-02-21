@@ -31,9 +31,7 @@ public:
 struct BaseSegment : public Segment
 {
 	using Segment::Segment;
-	void ReverseK(const int mouseX, const int mouseY);
 	void ForwardK();
-	void Render();
 	void AssignParent(Segment* child) = delete;
 	void AssignParent(Segment child) = delete;
 };
