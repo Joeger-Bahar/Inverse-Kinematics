@@ -177,7 +177,8 @@ void Renderer::Update()
 		case SDL_MOUSEMOTION:
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
-			m_MouseMoveCallback(mouseX, mouseY);
+			if (m_MouseMoveCallback)
+				m_MouseMoveCallback(mouseX, mouseY);
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:

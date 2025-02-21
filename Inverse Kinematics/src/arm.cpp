@@ -18,7 +18,10 @@ Arm::Arm(int baseX, int baseY, int segCount, int segLength, int segWidth)
 	for (int i = 1; i < m_SegCount; i++)
 	{
 		//m_SegTextures[i] = Renderer::m_LoadedTextures[armIndex];
-		m_Segments[i] = new Segment(segLength, segWidth, 0.f);
+		// Cycle color
+		bool isEven = i % 2 == 0;
+		SDL_Color color = { 255 * (i % 2), 255 * (i % 2), 255 * ((i + 1) % 2), 255};
+		m_Segments[i] = new Segment(segLength, segWidth, 0.f, color);
 		m_Segments[i]->AssignParent(m_Segments[i - 1]);
 		m_Segments[i - 1]->AssignChild(m_Segments[i]);
 	}
@@ -26,6 +29,10 @@ Arm::Arm(int baseX, int baseY, int segCount, int segLength, int segWidth)
 
 Arm::~Arm()
 {
+	for (Segment* seg : m_Segments)
+	{
+		delete seg;
+	}
 }
 
 void Arm::Update()
@@ -39,8 +46,4 @@ void Arm::Update()
 void Arm::Render()
 {
 	m_BaseSeg->Render();
-}
-
-void Arm::SetTarget(int x, int y)
-{
 }

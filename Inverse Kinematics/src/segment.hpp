@@ -6,12 +6,13 @@
 
 struct Segment
 {
-	Segment(int length, int width, float angle, Segment* parent = nullptr, Segment* child = nullptr);
+	Segment(int length, int width, float angle, SDL_Color color = { 255, 255, 255, 255 },
+		Segment* parent = nullptr, Segment* child = nullptr);
 	void AssignChild(Segment* child);
 	void AssignChild(Segment child);
 	void AssignParent(Segment* parent);
 	void AssignParent(Segment parent);
-	void ReverseK();
+	void ReverseK(const int mouseX = -1, const int mouseY = -1);
 	void ForwardK();
 	void Render();
 

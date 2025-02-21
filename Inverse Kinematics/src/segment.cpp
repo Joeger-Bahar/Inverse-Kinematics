@@ -4,11 +4,9 @@
 
 #include <SDL2_gfx/SDL2_gfxPrimitives.h>
 
-Segment::Segment(int length, int width, float angle, Segment* parent, Segment* child)
-	: length(length), width(width), angle(angle), parent(parent), child(child), color({ 255, 255, 255, 255 })
-{
-
-}
+Segment::Segment(int length, int width, float angle, SDL_Color color, Segment* parent, Segment* child)
+	: length(length), width(width), angle(angle), parent(parent), child(child), color(color)
+{}
 
 void Segment::AssignChild(Segment* child)
 {
@@ -22,7 +20,7 @@ void Segment::AssignParent(Segment parent)
 
 void Segment::Render()
 {
-	thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, static_cast<Uint8>(10),
+	thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, (uint8_t)width,
 		color.r, color.g, color.b, color.a);
 
 	if (child != nullptr)
@@ -31,20 +29,27 @@ void Segment::Render()
 	}
 }
 
-void Segment::ReverseK()
+					// Default to -1
+void Segment::ReverseK(const int mouseX, const int mouseY)
 {
-	glm::vec2 mouse = glm::vec2(parent->a.x, parent->a.y);
+	glm::vec2 target;
 
-	// Angle from mouse to base
-	glm::vec2 direction = glm::vec2(mouse - a);
+	if (!parent) // First segment, mouse coords should be passed
+		target = glm::vec2(mouseX, mouseY);
+	else // Mouse coords will be -1
+		target = parent->a;
+
+	// Angle from target to base
+	glm::vec2 direction = glm::vec2(target - a);
 	angle = glm::degrees(glm::atan(direction.y, direction.x));
 
-	// Normalize direction to length
-	b = mouse;
+	// Move end to target
+	b = target;
 
-	// Reversely calculate the base position
-	relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
-	a = b - relationDir * (float)width;
+	// Calculate the base position relative to the end
+	relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))))
+		* (float)length;
+	a = b - relationDir;
 
 	if (child != nullptr)
 	{
@@ -56,16 +61,15 @@ void Segment::ForwardK()
 {
 	if (child == nullptr) // First one
 	{
-		// This is most likely redundant
 		a = glm::vec2(Renderer::screenWidth / 2, Renderer::screenHeight / 2);
-		relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
-		b = a + relationDir * (float)width;
+		// Move end to position relative to base
+		b = a + relationDir;
 	}
 	else
 	{
-		// Samesies
 		a = child->b;
-		b = a + relationDir * (float)width;
+		// Samesies
+		b = a + relationDir;
 	}
 	if (parent != nullptr)
 	{
@@ -96,8 +100,9 @@ void BaseSegment::ReverseK(const int mouseX, const int mouseY)
 
 	// Reversely calculate the base position
 	// Normalize direction
-	relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
-	a = b - relationDir * (float)width;
+	relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))))
+		* (float)length;
+	a = b - relationDir;
 
 	if (child != nullptr)
 	{
@@ -108,12 +113,12 @@ void BaseSegment::ReverseK(const int mouseX, const int mouseY)
 void BaseSegment::ForwardK()
 {
 	a = glm::vec2(Renderer::mouseX, Renderer::mouseY);
-	b = a + relationDir * (float)width;
+	b = a + relationDir;
 }
 
 void BaseSegment::Render()
 {
-	thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, static_cast<Uint8>(10),
+	thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, (uint8_t)width,
 		color.r, color.g, color.b, color.a);
 	if (child != nullptr)
 	{

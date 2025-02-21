@@ -15,8 +15,6 @@ public:
 	void Update();
 	void Render();
 
-	void SetTarget(int x, int y);
-
 private:
 	BaseSegment* m_BaseSeg;
 	std::vector<Segment*> m_Segments;
