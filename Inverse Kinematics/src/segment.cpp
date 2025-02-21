@@ -4,8 +4,8 @@
 
 #include <SDL2_gfx/SDL2_gfxPrimitives.h>
 
-Segment::Segment(float length, float width, float angle, Segment* parent, Segment* child)
-	: length(length), width(width), angle(angle), parent(parent), child(child)
+Segment::Segment(int length, int width, float angle, Segment* parent, Segment* child)
+	: length(length), width(width), angle(angle), parent(parent), child(child), color({ 255, 255, 255, 255 })
 {
 
 }
@@ -22,8 +22,9 @@ void Segment::AssignParent(Segment parent)
 
 void Segment::Render()
 {
-	//Renderer::DrawRectRot(a.x, a.y, width, length, 255, 0, 255, 255, angle);
-	thickLineColor(Renderer::renderer, a.x, a.y, b.x, b.y, static_cast<Uint8>(10), 0xFFFFFFFF);
+	thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, static_cast<Uint8>(10),
+		color.r, color.g, color.b, color.a);
+
 	if (child != nullptr)
 	{
 		child->Render();
@@ -39,37 +40,37 @@ void Segment::ReverseK()
 	angle = glm::degrees(glm::atan(direction.y, direction.x));
 
 	// Normalize direction to length
-	direction = glm::normalize(direction) * length;
-	// Reverse direction
-	//direction *= -1;
-	// Add direction to the mouse to get the new point
-	//a = mouse + direction;
-	//a = glm::vec2(500, 300);
-	// Set end of line to mouse
 	b = mouse;
 
 	// Reversely calculate the base position
-	// Normalize direction
-	glm::vec2 aDirection = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
-	a = b - aDirection * width;
+	relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
+	a = b - relationDir * (float)width;
 
 	if (child != nullptr)
 	{
 		child->ReverseK();
 	}
-	else // If this is the last segment
-	{
-		// Set the end of the line to the center of the screen
-		a = glm::vec2(Renderer::screenWidth / 2, Renderer::screenHeight / 2);
-		// Set the base position to the end of the line minus the width
-		glm::vec2 bDirection = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle)));
-		b = a + bDirection * length;
-		parent->ForwardK();
-	}
 }
 
 void Segment::ForwardK()
 {
+	if (child == nullptr) // First one
+	{
+		// This is most likely redundant
+		a = glm::vec2(Renderer::screenWidth / 2, Renderer::screenHeight / 2);
+		relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
+		b = a + relationDir * (float)width;
+	}
+	else
+	{
+		// Samesies
+		a = child->b;
+		b = a + relationDir * (float)width;
+	}
+	if (parent != nullptr)
+	{
+		parent->ForwardK();
+	}
 }
 
 void Segment::AssignParent(Segment* parent)
@@ -91,19 +92,12 @@ void BaseSegment::ReverseK(const int mouseX, const int mouseY)
 	angle = glm::degrees(glm::atan(direction.y, direction.x));
 
 	// Normalize direction to length
-	direction = glm::normalize(direction) * length;
-	// Reverse direction
-	//direction *= -1;
-	// Add direction to the mouse to get the new point
-	//a = mouse + direction;
-	//a = glm::vec2(500, 300);
-	// Set end of line to mouse
 	b = mouse;
 
 	// Reversely calculate the base position
 	// Normalize direction
-	glm::vec2 bDirection = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
-	a = b - bDirection * width;
+	relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle))));
+	a = b - relationDir * (float)width;
 
 	if (child != nullptr)
 	{
@@ -113,12 +107,14 @@ void BaseSegment::ReverseK(const int mouseX, const int mouseY)
 
 void BaseSegment::ForwardK()
 {
+	a = glm::vec2(Renderer::mouseX, Renderer::mouseY);
+	b = a + relationDir * (float)width;
 }
 
 void BaseSegment::Render()
 {
-	//Renderer::DrawRectRot(a.x, a.y, width, length, 255, 255, 255, 255, angle);
-	thickLineColor(Renderer::renderer, a.x, a.y, b.x, b.y, static_cast<Uint8>(10), 0xFFFFFFFF);
+	thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, static_cast<Uint8>(10),
+		color.r, color.g, color.b, color.a);
 	if (child != nullptr)
 	{
 		child->Render();

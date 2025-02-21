@@ -101,10 +101,10 @@ void Renderer::DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, d
 	SDL_FRect dstRect = { static_cast<float>(rect->x), static_cast<float>(rect->y), static_cast<float>(rect->w), static_cast<float>(rect->h) };
 
 	// Rotation point of b using sin and cos
-	SDL_FPoint rotationPoint = { rect->w, rect->h };
+	SDL_FPoint rotationPoint = { (float)rect->w, (float)rect->h };
 	SDL_FRect rotRect = { rotationPoint.x, rotationPoint.y, 5, 5 };
 
-	SDL_FRect bRect = { rect->x, rect->y, 5, 5 };
+	SDL_FRect bRect = { (float)rect->x, (float)rect->y, 5, 5 };
 
 	// Render the texture with rotation
 	SDL_RenderCopyExF(renderer, texture, nullptr, &dstRect, rot, &rotationPoint, SDL_FLIP_NONE);
@@ -167,22 +167,28 @@ void Renderer::Update()
 		{
 		case SDL_QUIT:
 			running = false;
+			break;
 
 		case SDL_KEYDOWN:
 			if (event.key.keysym.sym == SDLK_ESCAPE)
 				running = false;
+			break;
 
 		case SDL_MOUSEMOTION:
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 			m_MouseMoveCallback(mouseX, mouseY);
+			break;
 
 		case SDL_MOUSEBUTTONDOWN:
+			if (!m_MouseClickCallback)
+				break;
 			uint32_t mouseState = SDL_GetMouseState(&mouseX, &mouseY);
 			if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
 			{
 				m_MouseClickCallback(mouseX, mouseY);
 			}
+			break;
 		}
 	}
 }

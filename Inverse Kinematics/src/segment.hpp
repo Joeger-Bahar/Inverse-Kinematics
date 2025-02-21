@@ -6,7 +6,7 @@
 
 struct Segment
 {
-	Segment(float length, float width, float angle, Segment* parent = nullptr, Segment* child = nullptr);
+	Segment(int length, int width, float angle, Segment* parent = nullptr, Segment* child = nullptr);
 	void AssignChild(Segment* child);
 	void AssignChild(Segment child);
 	void AssignParent(Segment* parent);
@@ -16,12 +16,14 @@ struct Segment
 	void Render();
 
 public:
-	glm::vec2 a; // base
-	glm::vec2 b; // top
-	float length, width;
-	double angle;
 	Segment* parent;
 	Segment* child;
+	glm::vec2 a; // base
+	glm::vec2 b; // top
+	glm::vec2 relationDir; // Cached matematical direction from a-b or b-a
+	double angle;
+	SDL_Color color;
+	uint8_t length, width;
 };
 
 // Actually the segment that follows the mouse
