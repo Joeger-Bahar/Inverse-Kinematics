@@ -7,7 +7,7 @@ int main()
 {
 	Renderer renderer("Inverse Kinematics", 1000, 700);
 	// BaseX, BaseY, SegmentCount, SegmentLength, SegmentWidth
-	Arm arm(500, 350, 5, 100, 10);
+	Arm arm(500, 350, 50, 10, 10);
 
 	while (Renderer::running)
 	{

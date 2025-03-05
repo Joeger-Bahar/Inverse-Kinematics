@@ -1,5 +1,7 @@
 #include "renderer.hpp"
 
+#include <SDL2/SDL_opengl.h>
+
 #include <iostream>
 
 std::vector<SDL_Texture*> Renderer::m_LoadedTextures;
@@ -20,16 +22,18 @@ Renderer::Renderer(const char* title, int width, int height)
 void Renderer::Init(const char* title, int width, int height)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
-	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
+	renderer = SDL_CreateRenderer(window, SDL_VIDEO_RENDER_OGL, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 	SDL_GetRendererOutputSize(renderer, &Renderer::screenWidth, &Renderer::screenHeight);
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 }
 
 void Renderer::Clear()
 {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(renderer, 9, 9, 9, 255);
 	SDL_RenderClear(renderer);
 }
 
