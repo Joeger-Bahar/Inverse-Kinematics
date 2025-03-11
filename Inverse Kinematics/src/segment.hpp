@@ -6,9 +6,8 @@
 
 struct Segment
 {
-	Segment(int length, int width, float angle, SDL_Color color = { 255, 255, 255, 255 },
+	Segment(int length, int width, float angle, uint8_t thickness, size_t textureIndex = -1, SDL_Color color = { 255, 255, 255, 255 },
 		Segment* parent = nullptr, Segment* child = nullptr);
-	Segment(int length, int width, float angle, size_t textureIndex, Segment* parent = nullptr, Segment* child = nullptr);
 	void AssignChild(Segment* child);
 	void AssignChild(Segment child);
 	void AssignParent(Segment* parent);
@@ -25,11 +24,13 @@ public:
 	glm::vec2 relationDir; // Cached matematical direction from a-b or b-a
 	double angle;
 	SDL_Color color;
-	float interpolationSpeed; // Dynamic
-	float maxDistance = 7.f; // The max disconnected distance between segs
+	// TODO: Optimize to only be in the last seg
+	float interpolationSpeed; // How fast the end seg follows the mouse
+	float maxDistance = 10.f; // The max disconnected distance between segs
+	float disconnectedDistance = 0.f; // The current disconnected distance between the next seg
 	size_t textureIndex;
-	int prevMouseX, prevMouseY;
 	uint8_t length, width;
+	uint8_t thickness; // Only used for lines
 };
 
 struct BaseSegment : public Segment

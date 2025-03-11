@@ -14,7 +14,7 @@ public:
 
 	void Init(const char* title, int width, int height);
 	void Render();
-	void Update();
+	int Update();
 
 	// Run function with 2 int parameters using the mouse position
 	void OnClick(std::function<void(int, int)> func);
@@ -26,24 +26,19 @@ public:
 	static const size_t LoadTexture(const char* path);
 	static const size_t LoadTexture(const char* path, int* width, int* height);
 
-	static void DrawRect(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-	static void DrawRect(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-	static void DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, double rot);
-	static void DrawRectRot(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g,
-		Uint8 b, Uint8 a, double rot);
-	static void DrawLine(int x1, int y1, int x2, int y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
 	~Renderer();
 public:
 	// Globally accessable texture storage
-	static std::vector<SDL_Texture*> m_LoadedTextures;
-	static std::vector<SDL_Rect> m_LoadedTexturesRects;
+	static std::vector<SDL_Texture*> loadedTextures;
+	static std::vector<SDL_Rect> loadedTexturesRects;
 	static SDL_Renderer* renderer;
 	static SDL_Window* window;
 	static int mouseX, mouseY;
+	static int prevMouseX, prevMouseY;
 	static int screenWidth;
 	static int screenHeight;
-	static bool running;
+	uint32_t runningSegCount; // Allows user to dynamically change segment count
+	static bool running, renderTextures;
 
 private:
 	void Clear();

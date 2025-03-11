@@ -4,17 +4,21 @@
 
 #include <iostream>
 
-std::vector<SDL_Texture*> Renderer::m_LoadedTextures;
-std::vector<SDL_Rect> Renderer::m_LoadedTexturesRects;
+std::vector<SDL_Texture*> Renderer::loadedTextures;
+std::vector<SDL_Rect> Renderer::loadedTexturesRects;
 SDL_Renderer* Renderer::renderer = nullptr;
 SDL_Window* Renderer::window = nullptr;
 int Renderer::mouseX = 0;
 int Renderer::mouseY = 0;
+int Renderer::prevMouseX = 0;
+int Renderer::prevMouseY = 0;
 int Renderer::screenWidth = 0;
 int Renderer::screenHeight = 0;
 bool Renderer::running = true;
+bool Renderer::renderTextures = true;
 
 Renderer::Renderer(const char* title, int width, int height)
+	: runningSegCount(0)
 {
 	this->Init(title, width, height);
 }
@@ -46,19 +50,19 @@ const size_t Renderer::LoadTexture(const char* path)
 {
 	SDL_Surface* surface = IMG_Load(path);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-	m_LoadedTextures.push_back(texture);
-	m_LoadedTexturesRects.push_back({ 0, 0, surface->w, surface->h });
+	loadedTextures.push_back(texture);
+	loadedTexturesRects.push_back({ 0, 0, surface->w, surface->h });
 	SDL_FreeSurface(surface);
 
-	return m_LoadedTextures.size() - 1;
+	return loadedTextures.size() - 1;
 }
 
 const size_t Renderer::LoadTexture(const char* path, int* width, int* height)
 {
 	SDL_Surface* surface = IMG_Load(path);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-	m_LoadedTextures.push_back(texture);
-	m_LoadedTexturesRects.push_back({ 0, 0, surface->w, surface->h });
+	loadedTextures.push_back(texture);
+	loadedTexturesRects.push_back({ 0, 0, surface->w, surface->h });
 	SDL_FreeSurface(surface);
 
 	SDL_Rect rect;
@@ -66,74 +70,7 @@ const size_t Renderer::LoadTexture(const char* path, int* width, int* height)
 	*width = rect.w;
 	*height = rect.h;
 
-	return m_LoadedTextures.size() - 1;
-}
-
-void Renderer::DrawRect(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	SDL_SetRenderDrawColor(renderer, r, g, b, a);
-	SDL_RenderFillRect(renderer, rect);
-}
-
-void Renderer::DrawRect(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	SDL_Rect rect = { x, y, w, h };
-	DrawRect(&rect, r, g, b, a);
-}
-
-void Renderer::DrawRectRot(SDL_Rect* rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a, double rot)
-{
-	// Create a temporary texture with alpha support
-	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, rect->w, rect->h);
-	if (!texture) return;
-
-	// Set the texture as the rendering target
-	SDL_SetRenderTarget(renderer, texture);
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); // Transparent background
-	SDL_RenderClear(renderer);
-
-	// Draw the filled rectangle on the texture
-	SDL_Rect tempRect = { 0, 0, rect->w, rect->h };
-	SDL_SetRenderDrawColor(renderer, r, g, b, a);
-	SDL_RenderFillRect(renderer, &tempRect);
-
-	// Reset the rendering target to the default
-	SDL_SetRenderTarget(renderer, nullptr);
-
-	// Define destination rectangle for rendering the rotated texture
-	SDL_FRect dstRect = { static_cast<float>(rect->x), static_cast<float>(rect->y), static_cast<float>(rect->w), static_cast<float>(rect->h) };
-
-	// Rotation point of b using sin and cos
-	SDL_FPoint rotationPoint = { (float)rect->w, (float)rect->h };
-	SDL_FRect rotRect = { rotationPoint.x, rotationPoint.y, 5, 5 };
-
-	SDL_FRect bRect = { (float)rect->x, (float)rect->y, 5, 5 };
-
-	// Render the texture with rotation
-	SDL_RenderCopyExF(renderer, texture, nullptr, &dstRect, rot, &rotationPoint, SDL_FLIP_NONE);
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-	SDL_RenderDrawRectF(renderer, &dstRect);
-	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-	SDL_RenderFillRectF(renderer, &rotRect);
-	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-	SDL_RenderFillRectF(renderer, &bRect);
-
-
-	// Clean up
-	SDL_DestroyTexture(texture);
-}
-
-void Renderer::DrawRectRot(const int x, const int y, const int w, const int h, Uint8 r, Uint8 g, Uint8 b, Uint8 a, double rot)
-{
-	SDL_Rect rect = { x, y, w, h };
-	DrawRectRot(&rect, r, g, b, a, rot);
-}
-
-void Renderer::DrawLine(int x1, int y1, int x2, int y2, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	SDL_SetRenderDrawColor(renderer, r, g, b, a);
-	SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+	return loadedTextures.size() - 1;
 }
 
 void Renderer::OnClick(std::function<void(int, int)> func)
@@ -162,8 +99,10 @@ void Renderer::Render()
 	this->Clear();
 }
 
-void Renderer::Update()
+int Renderer::Update()
 {
+	int returnSegCount = 0;
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
@@ -174,11 +113,47 @@ void Renderer::Update()
 			break;
 
 		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == SDLK_ESCAPE)
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
 				running = false;
+				break;
+
+			// Number keys
+			// This is a switch case OR statement
+			case SDLK_0:
+			case SDLK_1:
+			case SDLK_2:
+			case SDLK_3:
+			case SDLK_4:
+			case SDLK_5:
+			case SDLK_6:
+			case SDLK_7:
+			case SDLK_8:
+			case SDLK_9:
+				runningSegCount *= 10;
+				// Offset from 0 value
+				runningSegCount += (event.key.keysym.sym - 48);
+				break;
+
+			case SDLK_BACKSPACE:
+				runningSegCount /= 10; // Will truncate the last digit
+				break;
+			case SDLK_RETURN:
+				returnSegCount = runningSegCount;
+				runningSegCount = 0;
+				break;
+
+			case SDLK_a:
+				Renderer::renderTextures = !Renderer::renderTextures;
+				break;
+
+			}
 			break;
 
 		case SDL_MOUSEMOTION:
+			prevMouseX = mouseX;
+			prevMouseY = mouseY;
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 			if (m_MouseMoveCallback)
@@ -196,6 +171,8 @@ void Renderer::Update()
 			break;
 		}
 	}
+
+	return returnSegCount;
 }
 
 Renderer::~Renderer()

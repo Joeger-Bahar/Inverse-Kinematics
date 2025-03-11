@@ -7,13 +7,9 @@ glm::vec2 Lerp(const glm::vec2& start, const glm::vec2& end, float t)
     return start + t * (end - start);
 }
 
-Segment::Segment(int length, int width, float angle, SDL_Color color, Segment* parent, Segment* child)
-	: length(length), width(width), angle(angle), parent(parent), child(child), color(color), interpolationSpeed(0.08f), prevMouseX(0), prevMouseY(0), textureIndex(-1)
-{
-}
-
-Segment::Segment(int length, int width, float angle, size_t textureIndex, Segment* parent, Segment* child)
-	: length(length), width(width), angle(angle), parent(parent), child(child), color({ 255, 255, 255, 255 }), interpolationSpeed(0.08f), prevMouseX(0), prevMouseY(0), textureIndex(textureIndex)
+Segment::Segment(int length, int width, float angle, uint8_t thickness, size_t textureIndex, SDL_Color color, Segment* parent, Segment* child)
+	: length(length), width(width), angle(angle), parent(parent), child(child), color(color), interpolationSpeed(0.08f),
+      thickness(thickness), textureIndex(textureIndex)
 {
 }
 
@@ -29,15 +25,16 @@ void Segment::AssignParent(Segment parent)
 
 void Segment::Render()
 {
-	if (textureIndex != -1)
+                     // Wraparound
+	if (textureIndex != (size_t)-1 && Renderer::renderTextures)
 	{
-		SDL_Rect srcRect = Renderer::m_LoadedTexturesRects[textureIndex];
+		SDL_Rect srcRect = Renderer::loadedTexturesRects[textureIndex];
 		SDL_Rect dstRect = { (int)a.x, (int)a.y, length, width };
-		Renderer::DrawTextureRot(Renderer::m_LoadedTextures[textureIndex], &srcRect, &dstRect, angle);
+		Renderer::DrawTextureRot(Renderer::loadedTextures[textureIndex], &srcRect, &dstRect, angle);
 	}
 	else
     {
-        thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, (uint8_t)width,
+        thickLineRGBA(Renderer::renderer, a.x, a.y, b.x, b.y, thickness,
             color.r, color.g, color.b, color.a);
     }
     if (child != nullptr)
@@ -52,9 +49,7 @@ void Segment::ReverseK(const int mouseX, const int mouseY)
 
     if (!child) // Last segment follows the mouse
     {
-        float distance = glm::distance(glm::vec2(mouseX, mouseY), glm::vec2(prevMouseX, prevMouseY));
-        prevMouseX = mouseX;
-        prevMouseY = mouseY;
+        float distance = glm::distance(glm::vec2(mouseX, mouseY), glm::vec2(Renderer::prevMouseX, Renderer::prevMouseY));
 
         interpolationSpeed = std::min(1.0f / (1.0f + distance), 0.1f);
 
@@ -63,24 +58,19 @@ void Segment::ReverseK(const int mouseX, const int mouseY)
     }
     else
     {
-        target = child->a; // Target is the next segment's base
+        target = child->a; // Target is the previous segment's base
     }
 
-    // Compute new segment direction
+	// Direction from base to target
     glm::vec2 direction = target - a;
     float distToTarget = glm::length(direction);
-
-    // Limit movement within maxDistance
-    if (distToTarget > maxDistance)
-    {
-        direction = glm::normalize(direction) * maxDistance;
-    }
 
     angle = glm::degrees(glm::atan(direction.y, direction.x));
     b = target;
 
     // Compute new base position while keeping segment within allowed length
-    relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)), glm::sin(glm::radians(angle)))) * (float)length;
+    relationDir = glm::normalize(glm::vec2(glm::cos(glm::radians(angle)),
+                                           glm::sin(glm::radians(angle)))) * (float)length;
     a = b - relationDir;
 
     if (parent != nullptr)
@@ -96,13 +86,16 @@ void Segment::ForwardK()
         glm::vec2 direction = a - parent->b;
         float currentDist = glm::length(direction);
 
+		float dotProduct = glm::dot(glm::normalize(direction), glm::normalize(relationDir));
+
         // Adjust distance to maintain even spacing while allowing movement in [0, maxDistance]
         if (currentDist > maxDistance)
         {
             direction = glm::normalize(direction) * maxDistance;
         }
-        else if (currentDist < 0) // Prevent inversion
+        else if (dotProduct < 0) // Prevent inversion
         {
+			std::cout << "Inversion detected" << std::endl;
             direction = glm::vec2(0);
         }
 
