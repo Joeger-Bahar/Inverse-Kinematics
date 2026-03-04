@@ -26,11 +26,14 @@ public:
 	SDL_Color color;
 	// TODO: Optimize to only be in the last seg
 	float interpolationSpeed; // How fast the end seg follows the mouse
-	float maxDistance = 10.f; // The max disconnected distance between segs
+	float maxDistance = 0.f; // The max disconnected distance between segs
 	float disconnectedDistance = 0.f; // The current disconnected distance between the next seg
 	size_t textureIndex;
 	uint8_t length, width;
 	uint8_t thickness; // Only used for lines
+	bool  haveLast = false;
+	float lastA = 0.f; // Last atan result in degrees [-180, 180]
+	float unwrapped = 0.f; // Continuous angle in degrees;
 };
 
 struct BaseSegment : public Segment

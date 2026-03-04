@@ -6,8 +6,8 @@
 
 static glm::vec2 Lerp(const glm::vec2& start, const glm::vec2& end, float t);
 
-Arm::Arm(int baseX, int baseY, int segCount, int segLength, int segWidth)
-	: m_BaseX(baseX), m_BaseY(baseY), m_SegCount(segCount), m_SegLength(segLength), m_SegWidth(segWidth)
+Arm::Arm(int baseX, int baseY, int segCount, std::vector<int> segLength, int segWidth)
+	: m_BaseX(baseX), m_BaseY(baseY), m_SegCount(segCount), m_SegWidth(segWidth)
 {
 	// Reduce some ambiguity
 	const float defaultAngle = 0.;
@@ -16,7 +16,7 @@ Arm::Arm(int baseX, int baseY, int segCount, int segLength, int segWidth)
 	const size_t armIndex = Renderer::LoadTexture("assets/arm.png");
 
 	m_Segments.resize(m_SegCount);
-	m_BaseSeg = new BaseSegment(segLength, 50, defaultAngle, 10, armIndex);
+	m_BaseSeg = new BaseSegment(segLength[0], 50, defaultAngle, 10, armIndex);
 	m_Segments[0] = m_BaseSeg;
 
 	for (int i = 1; i < m_SegCount; i++)
@@ -27,7 +27,7 @@ Arm::Arm(int baseX, int baseY, int segCount, int segLength, int segWidth)
 		const size_t segIndex = i == m_SegCount - 1 ? handIndex : armIndex;
 		const int width = (segIndex == handIndex ? 100 : 50); // Hand needs to be wider than arm
 
-		m_Segments[i] = new Segment(segLength, width,
+		m_Segments[i] = new Segment(segLength[i], width,
 			defaultAngle, static_cast<uint8_t>(10 - (i / ((m_SegCount / 10) + 1))), segIndex, color);
 
 		m_Segments[i]->AssignParent(m_Segments[i - 1]);

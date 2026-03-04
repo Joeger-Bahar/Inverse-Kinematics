@@ -26,7 +26,7 @@ void Segment::AssignParent(Segment parent)
 void Segment::Render()
 {
                      // Wraparound
-	if (textureIndex != (size_t)-1 && Renderer::renderTextures)
+	if (false && textureIndex != (size_t)-1 && Renderer::renderTextures)
 	{
 		SDL_Rect srcRect = Renderer::loadedTexturesRects[textureIndex];
 		SDL_Rect dstRect = { (int)a.x, (int)a.y, length, width };
@@ -65,7 +65,41 @@ void Segment::ReverseK(const int mouseX, const int mouseY)
     glm::vec2 direction = target - a;
     float distToTarget = glm::length(direction);
 
-    angle = glm::degrees(glm::atan(direction.y, direction.x));
+    float desiredAngle = glm::degrees(glm::atan(direction.y, direction.x));
+
+    if (!haveLast)
+    {
+		lastA = desiredAngle;
+		unwrapped = desiredAngle;
+		haveLast = true;
+	}
+    else
+    {
+        float delta = desiredAngle - lastA;
+        if      (delta > 180.f)  delta -= 360.f;
+        else if (delta < -180.f) delta += 360.f;
+
+        unwrapped += delta;
+        lastA = desiredAngle;
+    }
+
+	float parentAngle = -90.f;
+	if (parent != nullptr)
+		parentAngle = parent->angle;
+
+    float clamped = unwrapped;
+
+	float minAngle = -30.0f + parentAngle;
+	float maxAngle = +150.0f + parentAngle;
+
+    if (clamped < minAngle) clamped = minAngle;
+    if (clamped > maxAngle) clamped = maxAngle;
+
+	desiredAngle = clamped;
+
+    // Compute the new absolute angle
+    angle = desiredAngle;
+
     b = target;
 
     // Compute new base position while keeping segment within allowed length
@@ -95,7 +129,7 @@ void Segment::ForwardK()
         }
         else if (dotProduct < 0) // Prevent inversion
         {
-			std::cout << "Inversion detected" << std::endl;
+			//std::cout << "Inversion detected" << std::endl;
             direction = glm::vec2(0);
         }
 
@@ -109,7 +143,6 @@ void Segment::ForwardK()
         child->ForwardK();
     }
 }
-
 
 void Segment::AssignParent(Segment* parent)
 {

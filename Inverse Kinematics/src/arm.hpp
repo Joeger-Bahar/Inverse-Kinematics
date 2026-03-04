@@ -9,7 +9,7 @@
 class Arm
 {
 public:
-	Arm(int baseX, int baseY, int segCount, int segLength, int segWidth);
+	Arm(int baseX, int baseY, int segCount, std::vector<int> segLength, int segWidth);
 	~Arm();
 
 	void Update();
