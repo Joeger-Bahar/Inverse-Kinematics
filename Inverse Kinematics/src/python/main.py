@@ -33,6 +33,9 @@ def main():
         arm.update(target_x, target_y, renderer.ikSpeedScalar)
         arm.render(renderer.screen)
 
+        reach_radius = abs(arm.segments[-1].b.x - arm.baseSeg.a.x)
+        renderer.set_arm_projection_radius(reach_radius)
+
         renderer.render()
         time.sleep(0.05)  # ~20 FPS
         # Send angles to Arduino

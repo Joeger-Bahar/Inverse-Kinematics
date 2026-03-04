@@ -47,6 +47,7 @@ class Renderer:
         }
         self.pendingTarget = dict(default_target)
         self.committedTarget = dict(default_target)
+        self.currentArmRadius = default_target["radius"]
 
     @staticmethod
     def load_texture(path):
@@ -190,6 +191,15 @@ class Renderer:
         )
         self.screen.blit(committed_label, (self.topViewRect.left + 10, self.topViewRect.bottom - 24))
 
+    def _draw_top_arm(self):
+        yaw_rad = math.radians(self.committedTarget["yaw"])
+        x_tip = self.topBase[0] + self.currentArmRadius * math.cos(yaw_rad)
+        z_tip = self.topBase[1] - self.currentArmRadius * math.sin(yaw_rad)
+        tip = (int(x_tip), int(z_tip))
+
+        pygame.draw.line(self.screen, (110, 220, 255), self.topBase, tip, 6)
+        pygame.draw.circle(self.screen, (110, 220, 255), tip, 6)
+
     def _draw_hud(self):
         mode_text = "SELECT" if self.selectionMode else "FOLLOW"
         hud = (
@@ -276,6 +286,7 @@ class Renderer:
             (self.sideViewRect.left, Renderer.screenHeight),
             2
         )
+        self._draw_top_arm()
         self._draw_target_markers()
         self._draw_hud()
 
@@ -289,3 +300,6 @@ class Renderer:
 
     def get_committed_yaw(self):
         return float(self.committedTarget["yaw"])
+
+    def set_arm_projection_radius(self, radius):
+        self.currentArmRadius = float(self._clamp(radius, 0.0, self.maxRadius))
