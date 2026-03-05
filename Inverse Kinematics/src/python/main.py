@@ -12,11 +12,23 @@ def normalize_servo_angle(angle):
 
 
 def main():
-    renderer = Renderer("Inverse Kinematics", 1200, 700)
-    arm = Arm(renderer.sideBase[0], renderer.sideBase[1], 3, [85, 60, 40], 10)
+    floor_offset_px = 20.0
+    renderer = Renderer("Inverse Kinematics", 1200, 700, floor_offset_px=floor_offset_px, slot_count=5)
+    arm = Arm(
+        renderer.sideBase[0],
+        renderer.sideBase[1],
+        3,
+        [85, 60, 40],
+        10,
+        floor_offset_px=floor_offset_px,
+        elbow_up=True
+    )
 
-    ser = serial.Serial('COM8', 115200)
-    time.sleep(2.0)  # Allow Arduino reset/boot after serial open
+    try:
+      ser = serial.Serial('COM8', 115200)
+      time.sleep(2.0)  # Allow Arduino reset/boot after serial open
+    except serial.SerialException as e:
+      print(f"Error opening serial port: {e}")
 
     while Renderer.running:
         seg_count = renderer.update()
@@ -26,14 +38,19 @@ def main():
                 renderer.sideBase[1],
                 seg_count,
                 [700 // seg_count] * seg_count,
-                10
+                10,
+                floor_offset_px=floor_offset_px,
+                elbow_up=True
             )
 
         target_x, target_y = renderer.get_committed_side_target()
         arm.update(target_x, target_y, renderer.ikSpeedScalar)
+        tip_x, tip_y = arm.get_end_effector_side()
+        renderer.set_actual_end_effector_side(tip_x, tip_y)
+        renderer.flush_pending_slot_saves()
         arm.render(renderer.screen)
 
-        reach_radius = abs(arm.segments[-1].b.x - arm.baseSeg.a.x)
+        reach_radius = abs(tip_x - arm.baseSeg.a.x)
         renderer.set_arm_projection_radius(reach_radius)
 
         renderer.render()
@@ -54,7 +71,7 @@ def main():
         yaw = renderer.get_committed_yaw()
         angle_str = f"{yaw:.1f}," + angle_str
         #print(angle_str)
-        ser.write(angle_str.encode('utf-8'))
+        #ser.write(angle_str.encode('utf-8'))
 
     pygame.quit()
 

@@ -3,11 +3,23 @@ from renderer import Renderer
 import pygame
 
 class Arm:
-    def __init__(self, baseX, baseY, segCount, segLengths, segWidth):
+    def __init__(
+        self,
+        baseX,
+        baseY,
+        segCount,
+        segLengths,
+        segWidth,
+        floor_offset_px=20.0,
+        elbow_up=True
+    ):
         self.baseX = baseX
         self.baseY = baseY
         self.segCount = segCount
         self.segWidth = segWidth
+        self.floorOffsetPx = float(floor_offset_px)
+        self.floorY = float(baseY + self.floorOffsetPx)
+        self.elbowUp = bool(elbow_up)
 
         self.segments = []
 
@@ -32,8 +44,14 @@ class Arm:
         if target_x is None or target_y is None:
             target_x = Renderer.mouseX
             target_y = Renderer.mouseY
-        self.segments[-1].reverse_k(target_x, target_y, speed_scalar=speed_scalar)
-        self.baseSeg.forward_k()
+        target_y = min(float(target_y), self.floorY)
+        self.segments[-1].reverse_k(
+            target_x,
+            target_y,
+            speed_scalar=speed_scalar,
+            elbow_up=self.elbowUp
+        )
+        self.baseSeg.forward_k(floor_y=self.floorY, elbow_up=self.elbowUp)
 
     def render(self, surface):
         self.baseSeg.render(surface)
@@ -45,3 +63,7 @@ class Arm:
             8,
             2
         )
+
+    def get_end_effector_side(self):
+        end_effector = self.segments[-1].b
+        return (float(end_effector.x), float(end_effector.y))
